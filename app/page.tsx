@@ -135,6 +135,8 @@ const ChatInterface = ({
     'chat'
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Signals to the workflow visualization that the pane animation is done
+  const [workflowPaneReady, setWorkflowPaneReady] = useState(false);
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
@@ -142,6 +144,14 @@ const ChatInterface = ({
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading]);
+
+  // Reset pane-ready state whenever a new workflow arrives so it re-fits
+  // once the slide-in animation completes again.
+  useEffect(() => {
+    if (workflow) {
+      setWorkflowPaneReady(false);
+    }
+  }, [workflow]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,8 +173,6 @@ const ChatInterface = ({
     return () => mq.removeEventListener('change', handler);
   }, []);
 
-  // These values control the animation positions and widths.
-  // On mobile the panes are full-width tabs, so skip the side-by-side sizing.
   const leftPaneWidth = isMobile ? '100%' : hasWorkflow ? '40%' : 'min(100%, 800px)';
   const leftPaneTranslate = hasWorkflow ? '0%' : '0%';
   const rightPaneWidth = isMobile ? '100%' : hasWorkflow ? '60%' : '0%';
@@ -282,8 +290,12 @@ const ChatInterface = ({
             damping: 30,
             opacity: { duration: 0.2 },
           }}
-          // Prevent the collapsed pane from capturing pointer events or layout space
           style={{ pointerEvents: hasWorkflow ? 'auto' : 'none' }}
+          // Fire once the spring animation has settled — at this point the
+          // pane has its final dimensions so ReactFlow can fitView correctly.
+          onAnimationComplete={() => {
+            if (hasWorkflow) setWorkflowPaneReady(true);
+          }}
         >
           <Card className="flex h-full w-full flex-col overflow-hidden">
             <CardHeader className="pb-0">
@@ -302,6 +314,7 @@ const ChatInterface = ({
                     <ButterflowWorkflowVisualization
                       workflow={{ workflow }}
                       tasks={[]}
+                      fitViewReady={workflowPaneReady}
                     />
                   </motion.div>
                 )}
@@ -322,12 +335,10 @@ export default function IndexPage() {
   const _threadId = useRef(uuid());
 
   const handleSendMessage = async (content: string) => {
-    // Set chat as started
     if (!chatStarted) {
       setChatStarted(true);
     }
 
-    // Add user message to chat
     const userMessage: LangChainMessage = {
       id: uuid(),
       type: 'human',
@@ -338,11 +349,8 @@ export default function IndexPage() {
     setIsLoading(true);
 
     try {
-      // In a real implementation, this would call the streamWorkflow function
-      // For now, we'll simulate a response after a delay
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Simulate AI response
       const aiMessage: LangChainMessage = {
         id: uuid(),
         type: 'ai',
@@ -350,7 +358,6 @@ export default function IndexPage() {
           "I've created a workflow based on your request. You can see it visualized on the right.",
       };
 
-      // Simulate workflow data (in real implementation, this would come from the streamWorkflow function)
       const mockWorkflow: Workflow = {
         version: '1.0',
         nodes: [
@@ -403,7 +410,6 @@ export default function IndexPage() {
     } catch (error) {
       console.error('Error sending message:', error);
 
-      // Add error message
       const errorMessage: LangChainMessage = {
         id: uuid(),
         type: 'ai',

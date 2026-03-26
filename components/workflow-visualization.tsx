@@ -10,6 +10,7 @@ import {
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
+  useReactFlow,
 } from '@xyflow/react';
 import ELK from 'elkjs/lib/elk.bundled.js';
 import { useTheme } from 'next-themes';
@@ -177,13 +178,15 @@ const transformButterflowToElements = (
   return { nodes, edges };
 };
 
-export const ButterflowWorkflowVisualization = ({
+// Inner component that has access to the ReactFlow instance
+const WorkflowInner = ({
   workflow,
   tasks,
   hoveredNodeId,
   setHoveredNodeId,
   selectedNodeId,
   onNodeSelect,
+  fitViewReady,
 }: {
   workflow: { workflow: ButterflowWorkflowContent };
   tasks: ButterflowTask[];
@@ -191,12 +194,14 @@ export const ButterflowWorkflowVisualization = ({
   setHoveredNodeId?: (id: string | undefined) => void;
   selectedNodeId?: string | null;
   onNodeSelect?: (id: string) => void;
+  fitViewReady: boolean;
 }) => {
   const [nodes, setNodes] = useNodesState<Node>([]);
   const [edges, setEdges] = useEdgesState<Edge>([]);
-  const [visible, setVisible] = useState(false);
+  const { fitView } = useReactFlow();
+  // Track whether ELK has finished laying out nodes
+  const [layoutReady, setLayoutReady] = useState(false);
 
-  // Handle node click for selection
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       onNodeSelect?.(node.id);
@@ -205,7 +210,7 @@ export const ButterflowWorkflowVisualization = ({
   );
 
   useEffect(() => {
-    setVisible(true);
+    setLayoutReady(false);
     const { nodes, edges } = transformButterflowToElements(workflow, tasks, {
       hoveredNodeId,
       setHoveredNodeId,
@@ -244,6 +249,7 @@ export const ButterflowWorkflowVisualization = ({
         // @ts-expect-error ELK typings are incorrect
         setNodes(layoutedNodes);
         setEdges(edges);
+        setLayoutReady(true);
       });
   }, [
     hoveredNodeId,
@@ -255,33 +261,69 @@ export const ButterflowWorkflowVisualization = ({
     selectedNodeId,
   ]);
 
+  // Only fitView once BOTH the layout is computed AND the parent animation is done
+  useEffect(() => {
+    if (!layoutReady || !fitViewReady) return;
+    requestAnimationFrame(() => {
+      fitView({ padding: 0.2, duration: 300 });
+    });
+  }, [layoutReady, fitViewReady, fitView]);
+
   const theme = useTheme();
 
   return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      nodeTypes={nodeTypes}
+      fitView
+      fitViewOptions={{
+        padding: 0.2,
+      }}
+      colorMode={theme.resolvedTheme === 'dark' ? 'dark' : 'light'}
+      className="bg-transparent!"
+      proOptions={proOptions}
+      onNodeClick={onNodeClick}
+    >
+      <Background
+        bgColor="transparent"
+        variant={BackgroundVariant.Lines}
+        patternClassName="opacity-10 stroke-muted-foreground/40!"
+      />
+    </ReactFlow>
+  );
+};
+
+export const ButterflowWorkflowVisualization = ({
+  workflow,
+  tasks,
+  hoveredNodeId,
+  setHoveredNodeId,
+  selectedNodeId,
+  onNodeSelect,
+  fitViewReady = false,
+}: {
+  workflow: { workflow: ButterflowWorkflowContent };
+  tasks: ButterflowTask[];
+  hoveredNodeId?: string;
+  setHoveredNodeId?: (id: string | undefined) => void;
+  selectedNodeId?: string | null;
+  onNodeSelect?: (id: string) => void;
+  fitViewReady?: boolean;
+}) => {
+  return (
     <div className="size-full">
-      {visible && (
-        <ReactFlowProvider>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            fitView
-            fitViewOptions={{
-              padding: 0.2,
-            }}
-            colorMode={theme.resolvedTheme === 'dark' ? 'dark' : 'light'}
-            className="bg-transparent!"
-            proOptions={proOptions}
-            onNodeClick={onNodeClick}
-          >
-            <Background
-              bgColor="transparent"
-              variant={BackgroundVariant.Lines}
-              patternClassName="opacity-10 stroke-muted-foreground/40!"
-            />
-          </ReactFlow>
-        </ReactFlowProvider>
-      )}
+      <ReactFlowProvider>
+        <WorkflowInner
+          workflow={workflow}
+          tasks={tasks}
+          hoveredNodeId={hoveredNodeId}
+          setHoveredNodeId={setHoveredNodeId}
+          selectedNodeId={selectedNodeId}
+          onNodeSelect={onNodeSelect}
+          fitViewReady={fitViewReady}
+        />
+      </ReactFlowProvider>
     </div>
   );
 };
