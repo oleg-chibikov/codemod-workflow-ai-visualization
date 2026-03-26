@@ -19,7 +19,7 @@ import '@xyflow/react/dist/style.css';
 
 import { cn, debounce } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Workflow } from './types';
+import { Workflow } from '../types';
 
 type ButterflowWorkflowContent = Workflow;
 
