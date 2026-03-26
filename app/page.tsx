@@ -14,6 +14,7 @@ import { v4 as uuid } from 'uuid';
 import { cn } from '@/lib/utils';
 import { ButterflowWorkflowVisualization } from '@/components/workflow-visualization';
 import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface LangChainMessageContent {
   type: 'text';
@@ -184,12 +185,23 @@ const ChatInterface = ({
       {/* Main two-pane layout container */}
       <div className="relative flex h-[calc(100%-40px)] w-full md:h-full">
         {/* Left pane - Chat */}
-        <div
+        <motion.div
           className={cn(
-            'flex h-full overflow-hidden',
-            hasWorkflow ? '' : 'mx-auto',
-            showMobileView === 'workflow' ? 'hidden md:block' : 'block'
+            'flex h-full overflow-hidden shrink-0',
+            showMobileView === 'workflow' ? 'hidden md:flex' : 'flex'
           )}
+          animate={{
+            width: leftPaneWidth,
+            x: leftPaneTranslate,
+            // Center horizontally when no workflow by using margin auto via padding trick
+            marginLeft: hasWorkflow ? '0px' : 'auto',
+            marginRight: hasWorkflow ? '0px' : 'auto',
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30,
+          }}
         >
           <Card className="flex h-full w-full flex-col overflow-hidden">
             <CardHeader className="pb-0">
@@ -226,29 +238,57 @@ const ChatInterface = ({
               </form>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
         {/* Right pane - Workflow visualization */}
-        <div
+        <motion.div
           className={cn(
             'flex h-full overflow-hidden',
-            showMobileView === 'chat' ? 'hidden md:block' : 'block'
+            showMobileView === 'chat' ? 'hidden md:flex' : 'flex'
           )}
+          animate={{
+            width: rightPaneWidth,
+            opacity: rightPaneOpacity,
+            x: rightPaneTranslate,
+          }}
+          initial={{
+            width: '0%',
+            opacity: 0,
+            x: '5%',
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30,
+            opacity: { duration: 0.2 },
+          }}
+          // Prevent the collapsed pane from capturing pointer events or layout space
+          style={{ pointerEvents: hasWorkflow ? 'auto' : 'none' }}
         >
           <Card className="flex h-full w-full flex-col overflow-hidden">
             <CardHeader className="pb-0">
               <CardTitle>Workflow Diagram</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 p-0 pt-2">
-              {workflow && (
-                <ButterflowWorkflowVisualization
-                  workflow={{ workflow }}
-                  tasks={[]}
-                />
-              )}
+              <AnimatePresence>
+                {workflow && (
+                  <motion.div
+                    className="h-full w-full"
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                  >
+                    <ButterflowWorkflowVisualization
+                      workflow={{ workflow }}
+                      tasks={[]}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
