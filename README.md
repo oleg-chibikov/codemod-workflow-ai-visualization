@@ -1,3 +1,5 @@
+
+
 # next-template
 
 A Next.js 13 template for building apps with ShadcnUI and Tailwind CSS.
@@ -17,3 +19,7 @@ npx create-next-app -e https://github.com/andonealessandro/start-nextjs-shadcn-u
 - Dark mode with `next-themes`
 - Tailwind CSS class sorting, merging and linting.
 - Custom Tailwind CSS file
+
+
+https://github.com/user-attachments/assets/26b72bbf-9a77-43b6-9e44-13eff5fef5b8
+
