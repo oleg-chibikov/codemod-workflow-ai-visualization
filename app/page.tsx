@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { ButterflowWorkflowVisualization } from '@/components/workflow-visualization';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTypewriter } from '@/hooks/useTypewriter';
 
 interface LangChainMessageContent {
   type: 'text';
@@ -82,38 +83,27 @@ const LandingInput = ({
 };
 
 // Chat message component
-const Message = ({
-  message,
-  index,
-}: {
-  message: LangChainMessage;
-  index: number;
-}) => {
+const Message = ({ message }: { message: LangChainMessage; index: number }) => {
   const isAi = message.type === 'ai';
+  const fullText =
+    typeof message.content === 'string'
+      ? message.content
+      : message.content.map((c) => c.text).join('');
+
+  const { displayed, isDone } = useTypewriter(fullText, isAi);
 
   return (
-    <div
-      className={cn(
-        'flex w-full gap-2 p-4',
-        isAi ? 'bg-muted/50' : 'bg-background'
-      )}
-    >
-      <div
-        className={cn(
-          'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full',
-          isAi ? 'bg-primary text-primary-foreground' : 'bg-muted'
-        )}
-      >
+    <div className={cn('flex w-full gap-2 p-4', isAi ? 'bg-muted/50' : 'bg-background')}>
+      <div className={cn('flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full', isAi ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
         {isAi ? 'AI' : 'Y'}
       </div>
       <div className="flex-1">
-        {typeof message.content === 'string' ? (
-          <p className="whitespace-pre-wrap text-sm">{message.content}</p>
-        ) : (
-          <p className="whitespace-pre-wrap text-sm">
-            {message.content.map((c) => c.text).join('')}
-          </p>
-        )}
+        <p className="whitespace-pre-wrap text-sm">
+          {displayed}
+          {isAi && !isDone && (
+            <span className="ml-0.5 inline-block w-0.5 h-4 bg-current align-middle animate-pulse" />
+          )}
+        </p>
       </div>
     </div>
   );
@@ -335,10 +325,12 @@ export default function IndexPage() {
   const _threadId = useRef(uuid());
 
   const handleSendMessage = async (content: string) => {
+    // Set chat as started
     if (!chatStarted) {
       setChatStarted(true);
     }
 
+    // Add user message to chat
     const userMessage: LangChainMessage = {
       id: uuid(),
       type: 'human',
