@@ -4,7 +4,6 @@ import {
   SunMedium,
   Twitter,
   Loader2,
-  type Icon as LucideIcon,
 } from "lucide-react"
 
 export const Icons = {
@@ -12,6 +11,27 @@ export const Icons = {
   moon: Moon,
   twitter: Twitter,
   loader: Loader2,
+  brain: (props: LucideProps) => (
+    <svg {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-muted-foreground shrink-0"
+      style={{
+        animation: 'letter-pulse 1.4s ease-in-out infinite',
+        animationDelay: '0s',
+      }}
+    >
+      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.98-3 2.5 2.5 0 0 1-1.32-4.24A3 3 0 0 1 5 9.5a3 3 0 0 1 .5-1.77A2.5 2.5 0 0 1 9.5 2Z" />
+      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.98-3 2.5 2.5 0 0 0 1.32-4.24A3 3 0 0 0 19 9.5a3 3 0 0 0-.5-1.77A2.5 2.5 0 0 0 14.5 2Z" />
+    </svg>
+  ),
   logo: (props: LucideProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" {...props}>
       <path

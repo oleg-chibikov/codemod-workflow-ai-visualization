@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTypewriter } from '@/hooks/useTypewriter';
 import { LangChainMessage } from '@/types/messages';
 import { aiMessage, mockWorkflow } from '@/mockData/mockData';
+import { ThinkingRow } from '@/components/ui/thinking-row';
 
 const LandingInput = ({
   onSubmit,
@@ -246,17 +247,7 @@ const ChatInterface = ({
                     />
                   );
                 })}
-                {isLoading && (
-                  <div className="flex items-center gap-1 p-4">
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce"
-                        style={{ animationDelay: `${i * 0.15}s` }}
-                      />
-                    ))}
-                  </div>
-                )}
+                {isLoading && <ThinkingRow />}
                 <div ref={messagesEndRef} />
               </div>
 
