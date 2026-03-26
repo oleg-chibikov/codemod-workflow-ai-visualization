@@ -29,7 +29,7 @@ export const Message = ({
   }, [isDone, isAi, onTypingDone]);
 
   return (
-    <div className={cn('flex w-full gap-2 p-4', isAi ? 'bg-muted/50' : 'bg-background')}>
+    <div className={cn('flex w-full gap-2 p-4 items-center', isAi ? 'bg-muted/50' : 'bg-background')}>
       <div className={cn('flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full', isAi ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
         {isAi ? 'AI' : 'Y'}
       </div>
