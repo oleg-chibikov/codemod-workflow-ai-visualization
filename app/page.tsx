@@ -71,11 +71,9 @@ const LandingInput = ({
 // Chat message component
 const Message = ({
   message,
-  index,
   onTypingDone,
 }: {
   message: LangChainMessage;
-  index: number;
   onTypingDone?: () => void;
 }) => {
   const isAi = message.type === 'ai';
@@ -240,7 +238,6 @@ const ChatInterface = ({
                     <Message
                       key={i}
                       message={message}
-                      index={i}
                       onTypingDone={
                         isLastAiMessage
                           ? () => setWorkflowReady(true)
