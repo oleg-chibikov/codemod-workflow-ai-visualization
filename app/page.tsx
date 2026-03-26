@@ -223,7 +223,17 @@ const ChatInterface = ({
                 {messages.map((message, i) => (
                   <Message key={i} message={message} index={i} />
                 ))}
-                {isLoading && '...'}
+                {isLoading && (
+                  <div className="flex items-center gap-1 p-4">
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }}
+                      />
+                    ))}
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
