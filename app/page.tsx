@@ -153,12 +153,23 @@ const ChatInterface = ({
 
   const hasWorkflow = workflow !== null;
 
-  // These values control the animation positions and widths
-  const leftPaneWidth = hasWorkflow ? '40%' : 'min(100%, 800px)';
+  // Track whether we're in the tabbed (mobile) layout
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  // These values control the animation positions and widths.
+  // On mobile the panes are full-width tabs, so skip the side-by-side sizing.
+  const leftPaneWidth = isMobile ? '100%' : hasWorkflow ? '40%' : 'min(100%, 800px)';
   const leftPaneTranslate = hasWorkflow ? '0%' : '0%';
-  const rightPaneWidth = hasWorkflow ? '60%' : '0%';
-  const rightPaneOpacity = hasWorkflow ? 1 : 0;
-  const rightPaneTranslate = hasWorkflow ? '0%' : '5%';
+  const rightPaneWidth = isMobile ? '100%' : hasWorkflow ? '60%' : '0%';
+  const rightPaneOpacity = isMobile ? 1 : hasWorkflow ? 1 : 0;
+  const rightPaneTranslate = isMobile ? '0%' : hasWorkflow ? '0%' : '5%';
 
   return (
     <div className="h-[calc(100vh-70px)] w-full px-4 py-2 md:px-8">
@@ -188,12 +199,11 @@ const ChatInterface = ({
         <motion.div
           className={cn(
             'flex h-full overflow-hidden shrink-0',
-            showMobileView === 'workflow' ? 'hidden md:flex' : 'flex'
+            showMobileView === 'workflow' ? 'hidden md:flex' : 'flex md:flex w-full md:w-auto'
           )}
           animate={{
             width: leftPaneWidth,
             x: leftPaneTranslate,
-            // Center horizontally when no workflow by using margin auto via padding trick
             marginLeft: hasWorkflow ? '0px' : 'auto',
             marginRight: hasWorkflow ? '0px' : 'auto',
           }}
@@ -244,7 +254,7 @@ const ChatInterface = ({
         <motion.div
           className={cn(
             'flex h-full overflow-hidden',
-            showMobileView === 'chat' ? 'hidden md:flex' : 'flex'
+            showMobileView === 'chat' ? 'hidden md:flex' : 'flex w-full md:w-auto'
           )}
           animate={{
             width: rightPaneWidth,
