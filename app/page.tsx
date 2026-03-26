@@ -69,7 +69,15 @@ const LandingInput = ({
 };
 
 // Chat message component
-const Message = ({ message }: { message: LangChainMessage; index: number }) => {
+const Message = ({
+  message,
+  index,
+  onTypingDone,
+}: {
+  message: LangChainMessage;
+  index: number;
+  onTypingDone?: () => void;
+}) => {
   const isAi = message.type === 'ai';
   const fullText =
     typeof message.content === 'string'
@@ -77,6 +85,15 @@ const Message = ({ message }: { message: LangChainMessage; index: number }) => {
       : message.content.map((c) => c.text).join('');
 
   const { displayed, isDone } = useTypewriter(fullText, isAi);
+
+  // Fire the callback exactly once when this AI message finishes typing
+  const hasNotified = useRef(false);
+  useEffect(() => {
+    if (isDone && isAi && !hasNotified.current) {
+      hasNotified.current = true;
+      onTypingDone?.();
+    }
+  }, [isDone, isAi, onTypingDone]);
 
   return (
     <div className={cn('flex w-full gap-2 p-4', isAi ? 'bg-muted/50' : 'bg-background')}>
@@ -107,10 +124,12 @@ const ChatInterface = ({
   workflow: Workflow | null;
 }) => {
   const [input, setInput] = useState('');
-  const [showMobileView, setShowMobileView] = useState<'chat' | 'workflow'>(
-    'chat'
-  );
+  const [showMobileView, setShowMobileView] = useState<'chat' | 'workflow'>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Whether the last AI message has finished typewriting
+  const [workflowReady, setWorkflowReady] = useState(false);
+
   // Signals to the workflow visualization that the pane animation is done
   const [workflowPaneReady, setWorkflowPaneReady] = useState(false);
 
@@ -121,13 +140,21 @@ const ChatInterface = ({
     }
   }, [messages, isLoading]);
 
-  // Reset pane-ready state whenever a new workflow arrives so it re-fits
-  // once the slide-in animation completes again.
+  // When a new workflow arrives, reset both ready flags so we wait for
+  // the new typewriter to finish before showing it.
   useEffect(() => {
     if (workflow) {
+      setWorkflowReady(false);
       setWorkflowPaneReady(false);
     }
   }, [workflow]);
+
+  // Re-reset pane-ready whenever workflowReady flips on (pane slides in fresh)
+  useEffect(() => {
+    if (workflowReady) {
+      setWorkflowPaneReady(false);
+    }
+  }, [workflowReady]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +164,8 @@ const ChatInterface = ({
     }
   };
 
-  const hasWorkflow = workflow !== null;
+  // Gate the displayed workflow on typewriting being complete
+  const hasWorkflow = workflowReady && workflow !== null;
 
   // Track whether we're in the tabbed (mobile) layout
   const [isMobile, setIsMobile] = useState(false);
@@ -204,9 +232,23 @@ const ChatInterface = ({
             <CardContent className="flex flex-1 flex-col overflow-hidden pb-0">
               {/* Messages Container */}
               <div className="flex-1 overflow-y-auto p-2">
-                {messages.map((message, i) => (
-                  <Message key={i} message={message} index={i} />
-                ))}
+                {messages.map((message, i) => {
+                  // Only attach the callback to the last AI message
+                  const isLastAiMessage =
+                    message.type === 'ai' && i === messages.length - 1;
+                  return (
+                    <Message
+                      key={i}
+                      message={message}
+                      index={i}
+                      onTypingDone={
+                        isLastAiMessage
+                          ? () => setWorkflowReady(true)
+                          : undefined
+                      }
+                    />
+                  );
+                })}
                 {isLoading && (
                   <div className="flex items-center gap-1 p-4">
                     {[0, 1, 2].map((i) => (
@@ -279,7 +321,7 @@ const ChatInterface = ({
             </CardHeader>
             <CardContent className="flex-1 p-0 pt-2">
               <AnimatePresence>
-                {workflow && (
+                {hasWorkflow && (
                   <motion.div
                     className="h-full w-full"
                     initial={{ opacity: 0, scale: 0.97 }}
