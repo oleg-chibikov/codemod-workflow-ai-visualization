@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Workflow } from '@/components/types';
@@ -54,6 +55,10 @@ const SPRING = {
  * `onAnimationComplete` should flip `workflowPaneReady` to `true` in the
  * parent so that `ButterflowWorkflowVisualization` knows it can safely call
  * `fitView`.
+ *
+ * On mobile, `mobileView` switching also needs to re-trigger `fitView` because
+ * the pane goes from hidden to visible — `mobileReady` handles this locally
+ * without touching the parent's `workflowPaneReady` state.
  */
 export const WorkflowPane = ({
     workflow,
@@ -69,6 +74,35 @@ export const WorkflowPane = ({
      * switched to "Workflow".
      */
     const isMobile = useIsMobile();
+
+    /**
+     * Tracks whether the pane is ready to call `fitView` after a mobile tab
+     * switch. Resets to `false` whenever the user navigates away from the
+     * workflow tab, then flips back to `true` on the next animation frame
+     * after they return — giving the pane time to paint at its full size
+     * before ReactFlow measures it.
+     */
+    const [mobileReady, setMobileReady] = useState(false);
+
+    useEffect(() => {
+        if (mobileView !== 'workflow') {
+            // Pane is hidden — mark as not ready so fitView won't fire stale.
+            setMobileReady(false);
+            return;
+        }
+
+        // Pane just became visible. Defer by one frame so layout is complete.
+        const id = requestAnimationFrame(() => setMobileReady(true));
+        return () => cancelAnimationFrame(id);
+    }, [mobileView]);
+
+    /**
+     * On desktop, rely on the spring animation settling (`workflowPaneReady`).
+     * On mobile, rely on the tab-switch readiness (`mobileReady`).
+     */
+    const fitViewReady = isMobile
+        ? mobileReady && hasWorkflow
+        : workflowPaneReady;
 
     return (
         <motion.div
@@ -107,7 +141,7 @@ export const WorkflowPane = ({
                                 <ButterflowWorkflowVisualization
                                     workflow={{ workflow }}
                                     tasks={[]}
-                                    fitViewReady={workflowPaneReady}
+                                    fitViewReady={fitViewReady}
                                 />
                             </motion.div>
                         )}
