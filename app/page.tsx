@@ -12,9 +12,9 @@ import { cn } from '@/lib/utils';
 import { ButterflowWorkflowVisualization } from '@/components/workflow-visualization';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTypewriter } from '@/hooks/useTypewriter';
+import { useTypewriter } from '@/hooks/use-typewriter';
 import { LangChainMessage } from '@/types/messages';
-import { aiMessage, mockWorkflow } from '@/mockData/mockData';
+import { aiMessage, mockWorkflow } from '@/mocks/mock-data';
 import { ThinkingRow } from '@/components/ui/thinking-row';
 
 const LandingInput = ({
