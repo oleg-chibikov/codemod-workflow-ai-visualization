@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid';
 import { LangChainMessage } from '@/types/messages';
 import { aiMessage, mockWorkflow } from '@/mocks/mock-data';
 import { LandingInput } from '@/components/page/landing-input';
-import { ChatInterface } from '@/components/page/chat-interface';
+import { ChatInterface } from '@/components/page/chat-interface/chat-interface';
 
 export default function IndexPage() {
   const [messages, setMessages] = useState<LangChainMessage[]>([]);

@@ -1,4 +1,4 @@
-import { Icons } from "../icons";
+import { Icons } from "../../icons";
 
 const thinkingStyles = `
   @keyframes letter-pulse {
