@@ -239,7 +239,7 @@ const ChatInterface = ({
 
               {/* Input Area */}
               <form onSubmit={handleSubmit} className="border-t p-4">
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <Textarea
                     value={input}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
