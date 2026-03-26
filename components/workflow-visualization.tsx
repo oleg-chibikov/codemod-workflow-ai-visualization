@@ -17,7 +17,7 @@ import { useTheme } from 'next-themes';
 
 import '@xyflow/react/dist/style.css';
 
-import { cn } from '@/lib/utils';
+import { cn, debounce } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Workflow } from './types';
 
@@ -267,6 +267,16 @@ const WorkflowInner = ({
     requestAnimationFrame(() => {
       fitView({ padding: 0.2, duration: 300 });
     });
+  }, [layoutReady, fitViewReady, fitView]);
+
+  // Re-fit on window resize (debounced) once the pane is ready
+  useEffect(() => {
+    if (!layoutReady || !fitViewReady) return;
+    const onResize = debounce(() => {
+      fitView({ padding: 0.2, duration: 200 });
+    }, 150);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, [layoutReady, fitViewReady, fitView]);
 
   const theme = useTheme();
